@@ -21,11 +21,15 @@ app.get('/categories', function (req, res) {
             }
         }
     }
+    console.log(req.query)
+    console.log(parseInt(req.query.offset))
+    console.log(result)
+    let sliceArr = result.slice(parseInt(req.query.offset), parseInt(req.query.limit));
     
     res.json({
         code: 0,
         msg: 'ok',
-        data: result,
+        data: sliceArr,
         total: result.length
     })
 });
