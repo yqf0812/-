@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>记账本</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+        #app {
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: skyblue;
+        }
+        .content {
+            width: 90%;
+            height: 80%;
+            background: greenyellow;
+            display: flex;
+            flex-direction: column;
+        }
+        .main {
+            flex: 1;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="content">
+            <div class="opt">
+                <el-select v-model="value" multiple placeholder="请选择月份">
+                    <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
+                    </el-option>
+                </el-select>
+            </div>
+            <div class="main">
+                <el-table :data="tableData" stripe style="width: 100%">
+                    <el-table-column prop="time" label="日期" >
+                        <template slot-scope="scope">{{ scope.row.time | dateFormat }}</template>
+                    </el-table-column>
+                    <el-table-column prop="category" label="类型" >
+                    </el-table-column>
+                    <el-table-column prop="amount" label="金额">
+                    </el-table-column>
+                </el-table>
+            </div>
+        </div>
+    </div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.27.0/moment.min.js"></script>
+<script>    
+    Vue.filter("dateFormat", function (value) {
+        //使用moment时间类库，将时间撮转成iso 8061
+        if (!value) return '';  
+        value = parseInt(value);
+        var m = moment(value);
+        return m.format();
+    })
+    let app = new Vue({
+        el: '#app',
+        data: {
+            options: [{
+                value: 'jan',
+                label: '一月'
+            }, {
+                value: 'feb',
+                label: '二月'
+            }, {
+                value: 'mar',
+                label: '三月'
+            }, {
+                value: 'apr',
+                label: '四月'
+            }, {
+                value: 'may',
+                label: '五月'
+            }, {
+                value: 'jun',
+                label: '六月'
+            }, {
+                value: 'jul',
+                label: '七月'
+            }, {
+                value: 'aug',
+                label: '八月'
+            }, {
+                value: 'sep',
+                label: '九月'
+            }, {
+                value: 'oct',
+                label: '十月'
+            }, {
+                value: 'nov',
+                label: '十一月'
+            }, {
+                value: 'dec',
+                label: '十二月'
+            }],
+            value: [],
+            tableData: []
+        },
+        created () {
+            axios.get('http://127.0.0.1:3000/categories').then( res => {
+                this.tableData = res.data.data;
+                console.log(this.tableData)
+            })
+        }
+    })
+</script>
+</html>

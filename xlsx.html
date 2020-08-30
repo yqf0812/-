@@ -1,0 +1,23 @@
+<html>
+
+<title> Convert Excel File To JSON </title>
+
+<head>
+    <script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js">
+    <script lang="javascript" src="js/xlsx.full.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#fileUploader").change(function (evt) {
+                var selectedFile = evt.target.files[0];
+                var reader = new FileReader();
+                console.log(selectedFile)
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <input type="file" id="fileUploader" name="fileUploader" accept=".xls, .xlsx" />
+    </br></br>
+    JSON : <label id="jsonObject"> </label>
+</body>
