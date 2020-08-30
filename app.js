@@ -11,12 +11,22 @@ app.get('/', function (req, res) {
     
 });
 
-const resule = require('./output.json');
+const result = require('./output.json');
+const a = require('./output1.json');
 app.get('/categories', function (req, res) {
+    for (let i = 0; i < result.length; i++) {
+        for (let j = 0; j  < a.length; j++) {
+            if (result[i].category === a[j].id) {
+                result[i].category = a[j].name;
+            }
+        }
+    }
+    
     res.json({
         code: 0,
         msg: 'ok',
-        data: resule
+        data: result,
+        total: result.length
     })
 });
 

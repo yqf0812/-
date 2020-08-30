@@ -45,15 +45,24 @@
             </div>
             <div class="main">
                 <el-table :data="tableData" stripe style="width: 100%">
-                    <el-table-column prop="time" label="日期" >
+                    <el-table-column prop="time" label="日期">
                         <template slot-scope="scope">{{ scope.row.time | dateFormat }}</template>
                     </el-table-column>
-                    <el-table-column prop="category" label="类型" >
+                    <el-table-column prop="category" label="类型">
+                    </el-table-column>
+                    <el-table-column prop="type" label="收入/支出">
+                        <template slot-scope="scope">{{ scope.row.type | type }}</template>
                     </el-table-column>
                     <el-table-column prop="amount" label="金额">
                     </el-table-column>
                 </el-table>
             </div>
+            <div class="block">
+                <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
+                    :current-page.sync="currentPage2" :page-sizes="[10, 20, 50]" :page-size="10"
+                    layout="sizes, prev, pager, next" :total="this.total">
+                </el-pagination>
+            </div>  
         </div>
     </div>
 </body>
@@ -68,7 +77,17 @@
         value = parseInt(value);
         var m = moment(value);
         return m.format();
-    })
+    });
+    Vue.filter("type", function (value) {
+        if (!value) return '';
+        let type = '';
+        if (value === '1') {
+            type = '收入';
+        } else {
+            type = '支出';
+        }
+        return type;
+    });
     let app = new Vue({
         el: '#app',
         data: {
@@ -110,14 +129,24 @@
                 label: '十二月'
             }],
             value: [],
-            tableData: []
+            tableData: [],
+            currentPage2: 5,
+            total: 0
         },
         created () {
             axios.get('http://127.0.0.1:3000/categories').then( res => {
                 this.tableData = res.data.data;
-                console.log(this.tableData)
+                this.total = res.data.total;
             })
-        }
+        },
+        methods: {
+            handleSizeChange(val) {
+                console.log(`每页 ${val} 条`);
+            },
+            handleCurrentChange(val) {
+                console.log(`当前页: ${val}`);
+            }
+        },
     })
 </script>
 </html>
