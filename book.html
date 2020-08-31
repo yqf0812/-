@@ -24,7 +24,6 @@
         .content {
             width: 90%;
             height: 80%;
-            background: greenyellow;
             display: flex;
             flex-direction: column;
         }
@@ -38,10 +37,11 @@
     <div id="app">
         <div class="content">
             <div class="opt">
-                <el-select v-model="value" multiple placeholder="请选择月份">
+                <el-select v-model="value" placeholder="请选择月份" @change='handleSelectChange($event)'>
                     <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
                     </el-option>
                 </el-select>
+                <el-button @click="refresh()">重置</el-button>
             </div>
             <div class="main">
                 <el-table :data="tableData" stripe style="width: 100%">
@@ -61,7 +61,7 @@
             </div>
             <div class="block">
                 <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
-                    :current-page.sync="currentPage2" :page-sizes="[10, 20, 50]" :page-size="10"
+                    :current-page.sync="currentPage2" :page-sizes="[10, 20, 50]" :page-size="pageSize"
                     layout="sizes, prev, pager, next" :total="this.total">
                 </el-pagination>
             </div>  
@@ -130,38 +130,70 @@
                 value: 'dec',
                 label: '十二月'
             }],
-            value: [],
+            value: '',
             tableData: [],
             currentPage2: 1,
             total: 0,
             limit: 10,
-            offset: 0
+            offset: 0,
+            selectMonth: '',
+            pageSize: 10
         },
         created () {
             let param = {
                 limit: 10,
-                offset: 0
+                offset: 0,
+                month: ''
             }
             this.getTableData(param);
         },
         methods: {
-            handleSizeChange(val) {
+            //重置数据
+            refresh() {
                 let param = {
-                    limit: val,
-                    offset: this.offset - 1
+                    limit: 10,
+                    offset: 0,
+                    month: ''
                 }
-                console.log(param)
+                this.selectMonth = '';
+                this.value = '';
+                this.pageSize = 10;
                 this.getTableData(param);
             },
-            handleCurrentChange(val) {
+            //下拉选择
+            handleSelectChange(e) {
+                this.selectMonth = e;
                 let param = {
-                    limit: this.limit,
-                    offset: val - 1
+                    limit: 10,
+                    offset: 0,
+                    month: e
                 }
-                console.log(param)
+                this.pageSize = 10;
+                this.getTableData(param);
+            },
+            //改变分页的数据尺寸
+            handleSizeChange(val) {
+                this.limit = val;
+                this.pageSize = val;
+                let param = {
+                    limit: val,
+                    offset: this.offset === 0 ? 0 : this.offset - 1,
+                    month: this.selectMonth
+                }
+                this.getTableData(param);
+            },
+            //改变页数
+            handleCurrentChange(val) {
+                this.offset = val;
+                let param = {
+                    limit: this.pageSize,
+                    offset: val === 0 ? 0 : val - 1,
+                    month: this.selectMonth
+                }
                 this.getTableData(param);
 
             },
+            //获取数据
             getTableData(param) {
                 let url = this.axiosGet('http://127.0.0.1:3000/categories', param);
                 console.log(url)
@@ -170,6 +202,7 @@
                     this.total = res.data.total;
                 })
             },
+            //封装axios的get方法传值
             axiosGet(url, params) {
                 let paramsStr = "";
                 Object.keys(params).forEach(key => {

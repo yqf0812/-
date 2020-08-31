@@ -1,6 +1,8 @@
 const fs = require('fs');
 const express = require('express');
-const app = express();  
+const app = express(); 
+const deepCopy = require('./deepCopy');
+const timesTamp = require('./timesTamp');
 
 app.get('/', function (req, res) {
     res.writeHead(200, { 'Content-type': 'text/html' });
@@ -21,16 +23,32 @@ app.get('/categories', function (req, res) {
             }
         }
     }
+    let sliceArr = deepCopy(result);
+    let timeArr = [];
+    let total = 0;
+    let offset = parseInt(req.query.offset) * parseInt(req.query.limit);
     console.log(req.query)
-    console.log(parseInt(req.query.offset))
-    console.log(result)
-    let sliceArr = result.slice(parseInt(req.query.offset), parseInt(req.query.limit));
-    
+    //时间过滤
+    if (req.query.month === '') {
+        timeArr = sliceArr;
+        total = result.length;
+    } else {
+        for (let i = 0; i < sliceArr.length; i++) {
+            if (parseInt(sliceArr[i].time) >= timesTamp(req.query.month).start && parseInt(sliceArr[i].time) <= timesTamp(req.query.month).end) {
+                timeArr.push(sliceArr[i])
+            }
+        }
+        total = timeArr.length;
+        // offset = 0 *  parseInt(req.query.limit);
+    }
+    // console.log(timeArr)
+    //分页
+    timeArr = timeArr.splice((offset), parseInt(req.query.limit));
     res.json({
         code: 0,
         msg: 'ok',
-        data: sliceArr,
-        total: result.length
+        data: timeArr,
+        total: total
     })
 });
 
