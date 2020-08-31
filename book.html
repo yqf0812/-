@@ -31,17 +31,29 @@
             flex: 1;
             overflow-y: auto;
         }
+        [v-cloak] {
+		    display:none;
+        }
     </style>
 </head>
 <body>
-    <div id="app">
+    <div id="app" v-cloak>
         <div class="content">
             <div class="opt">
                 <el-select v-model="value" placeholder="请选择月份" @change='handleSelectChange($event)'>
                     <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
                     </el-option>
                 </el-select>
-                <el-button @click="refresh()">重置</el-button>
+                <el-button @click="refresh()" v-cloak>重置</el-button>
+                <el-button @click="add()" v-cloak>添加</el-button>
+                <span v-cloak>全年收入：{{allIncome | mony}}</span>
+                <span style="margin-left: 15px;" v-cloak>全年支出：{{allZhichu | mony}}</span>
+                <span v-if='value' style="margin-left: 15px;" v-cloak>
+                    {{selectMonthLabel}}的收入金额：{{monthIncome | mony}}
+                </span>
+                <span v-if='value' style="margin-left: 15px;" v-cloak>
+                    {{selectMonthLabel}}的支出金额：{{monthZhichu | mony}}
+                </span>
             </div>
             <div class="main">
                 <el-table :data="tableData" stripe style="width: 100%">
@@ -56,6 +68,7 @@
                         <template slot-scope="scope">{{ scope.row.type | type }}</template>
                     </el-table-column>
                     <el-table-column prop="amount" label="金额">
+                        <template slot-scope="scope">{{ scope.row.amount | mony }}</template>
                     </el-table-column>
                 </el-table>
             </div>
@@ -66,6 +79,34 @@
                 </el-pagination>
             </div>  
         </div>
+        <el-dialog title="记账" :visible.sync="dialogTableVisible">
+            <el-form ref="form"  label-width="80px">
+                <el-form-item label="日期时间">
+                    <el-date-picker
+                        v-model="dateTime"
+                        type="datetime"
+                        placeholder="选择日期时间">
+                    </el-date-picker>
+                </el-form-item>
+                <el-form-item label="收支">
+                    <el-select v-model="inAndOut" placeholder="请选择收入类型" @change='handleSelectInAndOut($event)'>
+                        <el-option v-for="item in inAndOutOptions" :key="item.type" :label="item.label" :value="item.type">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="分类">
+                    <el-select v-model="bookType" placeholder="请选择账单类型" @change='handleSelectChange($event)'>
+                        <el-option v-for="item in fenleiOptions" :key="item.id" :label="item.name" :value="item.id">
+                        </el-option>
+                    </el-select>
+                    <span>请先选择收支类型</span>
+                </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="dialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+            </span>
+        </el-dialog>
     </div>
 </body>
 <script src="https://cdn.jsdelivr.net/npm/vue"></script>
@@ -89,6 +130,10 @@
             type = '支出';
         }
         return type;
+    });
+    Vue.filter("mony", function (value) {
+        value = parseFloat(value).toFixed(2);
+        return `￥${value}`;
     });
     let app = new Vue({
         el: '#app',
@@ -137,7 +182,84 @@
             limit: 10,
             offset: 0,
             selectMonth: '',
-            pageSize: 10
+            pageSize: 10,
+            allIncome: 0,
+            monthIncome: 0,
+            allZhichu: 0,
+            monthZhichu: 0,
+            selectMonthLabel: '',
+            dialogTableVisible: false,
+            dateTime: '',
+            optionsType: [
+                {
+                    "id": "1bcddudhmh",
+                    "type": "0",
+                    "name": "车贷"
+                },
+                {
+                    "id": "hc5g66kviq",
+                    "type": "0",
+                    "name": "车辆保养"
+                },
+                {
+                    "id": "8s0p77c323",
+                    "type": "0",
+                    "name": "房贷"
+                },
+                {
+                    "id": "0fnhbcle6hg",
+                    "type": "0",
+                    "name": "房屋租赁"
+                },
+                {
+                    "id": "odrjk823mj8",
+                    "type": "0",
+                    "name": "家庭用品"
+                },
+                {
+                    "id": "bsn20th0k2o",
+                    "type": "0",
+                    "name": "交通"
+                },
+                {
+                    "id": "j1h1nohhmmo",
+                    "type": "0",
+                    "name": "旅游"
+                },
+                {
+                    "id": "3tqndrjqgrg",
+                    "type": "0",
+                    "name": "日常饮食"
+                },
+                {
+                    "id": "s73ijpispio",
+                    "type": "1",
+                    "name": "工资"
+                },
+                {
+                    "id": "1vjj47vpd28",
+                    "type": "1",
+                    "name": "股票投资"
+                },
+                {
+                    "id": "5il79e11628",
+                    "type": "1",
+                    "name": "基金投资"
+                }
+            ],
+            inAndOutOptions: [
+                {
+                    type: '1',
+                    label: '收入'
+                },
+                {
+                    type: '0',
+                    label: '支出'
+                }
+            ],
+            inAndOut: '',
+            bookType: '',
+            fenleiOptions: []
         },
         created () {
             let param = {
@@ -148,6 +270,20 @@
             this.getTableData(param);
         },
         methods: {
+            //选择收支类型
+            handleSelectInAndOut(e) {
+                console.log(e)
+                this.fenleiOptions = [];
+                this.optionsType.map(value => {
+                    if(value.type === e) {
+                        this.fenleiOptions.push(value)
+                    }
+                })
+            },
+            //添加数据
+            add() {
+                this.dialogTableVisible = true;
+            },
             //重置数据
             refresh() {
                 let param = {
@@ -170,6 +306,11 @@
                 }
                 this.pageSize = 10;
                 this.getTableData(param);
+                this.options.map(value => {
+                    if (value.value === e) {
+                        this.selectMonthLabel = value.label;
+                    }
+                })
             },
             //改变分页的数据尺寸
             handleSizeChange(val) {
@@ -200,6 +341,11 @@
                 axios.get(url).then(res => {
                     this.tableData = res.data.data;
                     this.total = res.data.total;
+                    this.allIncome = res.data.allIncome;
+                    this.allZhichu = res.data.allExpenditure;
+                    this.monthIncome = res.data.income;
+                    this.monthZhichu = res.data.expenditure;  
+                    console.log(this.monthIncome)  
                 })
             },
             //封装axios的get方法传值
