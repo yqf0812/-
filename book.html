@@ -11,25 +11,41 @@
             padding: 0;
             width: 100%;
             height: 100%;
+            background: skyblue;
         }
         #app {
             width: 100%;
-            height: 100%;
             box-sizing: border-box;
             display: flex;
             justify-content: center;
-            align-items: center;
-            background: skyblue;
+            
         }
         .content {
             width: 95%;
-            height: 85%;
+            height: 100%;
+            padding: 0 20px;
             display: flex;
             flex-direction: column;
         }
+        .assets {
+            width: 100%;
+            height: 50px;
+            background: pink;
+            line-height: 25px;
+            text-align: center;
+        }
+        .opt {
+            margin-top: 15px;
+        }
         .main {
-            flex: 1;
-            overflow-y: auto;
+            margin-top: 15px;
+        }
+        .echarts {
+            width: 100%;
+            height: 250px;
+            border: 1px solid plum;
+            margin-top: 20px;
+            margin-bottom: 20px;
         }
         [v-cloak] {
 		    display:none;
@@ -42,6 +58,19 @@
 <body>
     <div id="app" v-cloak>
         <div class="content">
+            <div class="assets">
+                <p>
+                    <span v-cloak>全年收入：{{allIncome | mony}}</span>
+                    <span style="margin-left: 15px;" v-cloak>全年支出：{{allZhichu | mony}}</span>
+                    <span style="margin-left: 15px;" v-cloak>全年结余：{{jieyu | mony}}</span>
+                    <span v-if="value" style="margin-left: 20px;" v-cloak>
+                        {{selectMonthLabel}}收入：{{monthIncome | mony}}
+                    </span>
+                    <span v-if="value" style="margin-left: 15px;" v-cloak>
+                        {{selectMonthLabel}}支出：{{monthZhichu | mony}}
+                    </span>
+                </p>
+            </div>
             <div class="opt">
                 <el-select v-model="value" placeholder="请选择月份" @change="handleSelectChange($event)">
                     <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
@@ -49,15 +78,6 @@
                 </el-select>
                 <el-button @click="refresh()" v-cloak>重置</el-button>
                 <el-button @click="add()" v-cloak>添加</el-button>
-                <span v-cloak>全年收入：{{allIncome | mony}}</span>
-                <span style="margin-left: 15px;" v-cloak>全年支出：{{allZhichu | mony}}</span>
-                <span style="margin-left: 15px;" v-cloak>全年结余：{{jieyu | mony}}</span>
-                <span v-if="value" style="margin-left: 5px;" v-cloak>
-                    {{selectMonthLabel}}收入：{{monthIncome | mony}}
-                </span>
-                <span v-if="value" style="margin-left: 5px;" v-cloak>
-                    {{selectMonthLabel}}支出：{{monthZhichu | mony}}
-                </span>
             </div>
             <div class="main">
                 <el-table :data="tableData" stripe style="width: 100%" @filter-change="handleFilterChange">
@@ -82,6 +102,9 @@
                     layout="sizes, prev, pager, next" :total="this.total">
                 </el-pagination>
             </div>  
+            <div class="echarts">
+                <div id="ehcart1" style="height: 100%;width: 30%;"></div>
+            </div>
         </div>
         <el-dialog title="记账" :visible.sync="dialogTableVisible" :close-on-click-modal="false">
             <el-form ref="ruleForm" :model="ruleForm" :rules="rules"  label-width="80px">
@@ -120,6 +143,7 @@
 <script src="https://unpkg.com/element-ui/lib/index.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.27.0/moment.min.js"></script>
+<script src="https://cdn.staticfile.org/echarts/4.3.0/echarts.min.js"></script>
 <script>    
     Vue.filter("dateFormat", function (value) {
         //使用moment时间类库，将时间撮转成iso 8061
@@ -304,6 +328,30 @@
                     value: value.id
                 })
             })
+        },
+        mounted() {
+            var myChart = echarts.init(document.getElementById('ehcart1'));
+            var option = {
+            title: {
+                text: 'ECharts 入门示例'
+            },
+            tooltip: {},
+            legend: {
+                data:['销量']
+            },
+            xAxis: {
+                data: ["衬衫","羊毛衫","雪纺衫","裤子","高跟鞋","袜子"]
+            },
+            yAxis: {},
+            series: [{
+                name: '销量',
+                type: 'bar',
+                data: [5, 20, 36, 10, 10, 20]
+            }]
+        };
+
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
         },
         methods: {
             //分类筛选
