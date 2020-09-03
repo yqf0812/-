@@ -46,6 +46,7 @@
             border: 1px solid plum;
             margin-top: 20px;
             margin-bottom: 20px;
+            display: flex;
         }
         [v-cloak] {
 		    display:none;
@@ -58,19 +59,6 @@
 <body>
     <div id="app" v-cloak>
         <div class="content">
-            <div class="assets">
-                <p>
-                    <span v-cloak>全年收入：{{allIncome | mony}}</span>
-                    <span style="margin-left: 15px;" v-cloak>全年支出：{{allZhichu | mony}}</span>
-                    <span style="margin-left: 15px;" v-cloak>全年结余：{{jieyu | mony}}</span>
-                    <span v-if="value" style="margin-left: 20px;" v-cloak>
-                        {{selectMonthLabel}}收入：{{monthIncome | mony}}
-                    </span>
-                    <span v-if="value" style="margin-left: 15px;" v-cloak>
-                        {{selectMonthLabel}}支出：{{monthZhichu | mony}}
-                    </span>
-                </p>
-            </div>
             <div class="opt">
                 <el-select v-model="value" placeholder="请选择月份" @change="handleSelectChange($event)">
                     <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
@@ -104,6 +92,8 @@
             </div>  
             <div class="echarts">
                 <div id="ehcart1" style="height: 100%;width: 30%;"></div>
+                <div id="ehcart2" style="height: 100%;width: 30%;"></div>
+                <div id="ehcart3" style="height: 100%;width: 40%;"></div>
             </div>
         </div>
         <el-dialog title="记账" :visible.sync="dialogTableVisible" :close-on-click-modal="false">
@@ -312,6 +302,117 @@
                     { required: true, message: '请输入金额', trigger: 'blur' },
                     { type: 'number', message: '请输入数值' }
                 ]
+            },
+            option: {
+                title: {
+                    text: '全年收支情况',
+                    subtext: '',
+                    subtextStyle: {
+                        color: 'red'
+                    }
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{b}:￥{c}'
+                },
+                legend: {
+                    data: ['支出', '结余']
+                },
+                series: [
+                    {
+                        type: 'pie',
+                        radius: '55%',
+                        center: ['50%', '60%'],
+                        data: [
+                            { value: 0, name: '支出' },
+                            { value: 0, name: '结余' }
+                        ],
+                        label: {
+                            formatter: '{b}:￥{c}'
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        }
+                    }
+                ]
+            },
+            option2: {
+                title: {
+                    text: '请选择月份'
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{b}:￥{c}'
+                },
+                legend: {
+                    data: ['支出', '收入']
+                },
+                series: [
+                    {
+                        type: 'pie',
+                        radius: '55%',
+                        center: ['50%', '60%'],
+                        data: [
+                            { value: 0, name: '支出' },
+                            { value: 0, name: '收入' }
+                        ],
+                        label: {
+                            formatter: '{b}:￥{c}'
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        }
+                    }
+                ]
+            },
+            option3: {
+                title: {
+                    text: 'sdsd'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {            // 坐标轴指示器，坐标轴触发有效
+                        type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: [
+                    {
+                        type: 'category',
+                        data: [],
+                       axisLabel: {    //重点在这一块，其余可以忽略
+                            interval: 0,   //这个一定要有，别忘记了
+                            rotate: 15,
+                            textStyle: {
+                                color: '#000',
+                                fontSize: 10
+                            }
+                        },
+                        axisTick: {
+                            alignWithLabel: true
+                        }
+                    }
+                ],
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    data: [],
+                    type: 'bar'
+                }]
             }
         },
         created () {
@@ -330,28 +431,12 @@
             })
         },
         mounted() {
-            var myChart = echarts.init(document.getElementById('ehcart1'));
-            var option = {
-            title: {
-                text: 'ECharts 入门示例'
-            },
-            tooltip: {},
-            legend: {
-                data:['销量']
-            },
-            xAxis: {
-                data: ["衬衫","羊毛衫","雪纺衫","裤子","高跟鞋","袜子"]
-            },
-            yAxis: {},
-            series: [{
-                name: '销量',
-                type: 'bar',
-                data: [5, 20, 36, 10, 10, 20]
-            }]
-        };
+            console.log(1)
+            this.$nextTick(() => {
+                
+            })
 
-        // 使用刚指定的配置项和数据显示图表。
-        myChart.setOption(option);
+        
         },
         methods: {
             //分类筛选
@@ -427,8 +512,10 @@
                 this.options.map(value => {
                     if (value.value === e) {
                         this.selectMonthLabel = value.label;
+                        this.option2.title.text = value.label
                     }
                 })
+                this.getMonthData();
             },
             //改变分页的数据尺寸
             handleSizeChange(val) {
@@ -457,7 +544,6 @@
             //获取数据
             getTableData(param) {
                 let url = this.axiosGet('http://127.0.0.1:3000/categories', param);
-                console.log(url)
                 axios.get(url).then(res => {
                     this.tableData = res.data.data;
                     this.total = res.data.total;
@@ -466,7 +552,67 @@
                     this.monthIncome = res.data.income;
                     this.monthZhichu = res.data.expenditure;  
                     this.jieyu = parseInt(res.data.allIncome) - parseInt(res.data.allExpenditure);
-                    console.log(this.monthIncome)  
+                    
+                    var myChart = echarts.init(document.getElementById('ehcart1'));
+                    var myChart1 = echarts.init(document.getElementById('ehcart2'));
+                    
+                    
+                    this.option.series[0].data[0].value = this.allZhichu;
+                    this.option.title.subtext = `全年收入：￥${this.allIncome}`;
+                    this.option.series[0].data[1].value = this.jieyu;
+                    this.option2.series[0].data[0].value = this.monthZhichu;
+                    this.option2.series[0].data[1].value = this.monthIncome;
+                    
+                    myChart.setOption(this.option);
+                    myChart1.setOption(this.option2);
+                })
+            },
+            //单独获取月份的事数据
+            getMonthData() {
+                let param = {
+                    limit: 100,
+                    offset: 0,
+                    month: this.selectMonth,
+                    type: ''
+                }
+                let url = this.axiosGet('http://127.0.0.1:3000/categories', param);
+                axios.get(url).then(res => {
+                    let temp = [];
+                    this.option3.xAxis[0].data = [];
+                    this.option3.series[0].data = [];
+                    res.data.data.map( value => {
+                        let flag = true;
+                        for (let item of temp) {
+                            if (value.category === item.category) {
+                                flag = false;
+                                item.amount =parseInt(item.amount) + parseInt(value.amount);
+                            }
+                        }
+                        if (flag) {
+                            temp.push(value)
+                        }
+                    })
+                    console.log(temp)
+                    
+                    for (let i = 0; i < temp.length -1; i++) {
+                        for (let j = 0; j < temp.length - 1 -i; j++) {
+                            if (parseInt(temp[j].amount) > parseInt(temp[j+1].amount) ) {
+                                var temp3 = temp[j];
+                                temp[j] = temp[j + 1];
+                                temp[j + 1] = temp3;
+                            }
+                        }
+                    }
+                    temp.map(value => {
+                        if (value.type === '0') {
+                            this.option3.xAxis[0].data.push(value.category);
+                            this.option3.series[0].data.push(value.amount)
+                        }
+                    })
+                    console.log(temp)
+                    this.option3.title.text = this.selectMonthLabel + '支出类别排行榜';
+                    var myChart2 = echarts.init(document.getElementById('ehcart3'));
+                    myChart2.setOption(this.option3);
                 })
             },
             //封装axios的get方法传值

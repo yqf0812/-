@@ -26,6 +26,7 @@ app.get('/categories', function (req, res) {
     let expenditure = 0; //当前月支出金额
     let allIncome = 0; //全年收入
     let allExpenditure = 0; //全年支出
+    let monyArr = [];
     let offset = parseInt(req.query.offset) * parseInt(req.query.limit);
     //分类筛选
     console.log(req.query.type)
@@ -65,12 +66,23 @@ app.get('/categories', function (req, res) {
         timeArr = spliceArr;
         total = timeArr.length;
     }
+    //只筛选时间
+    if (req.query.month === '') {
+        console.log(1)
+    } else {
+        
+        for (let i = 0; i < sliceArr.length; i++) {
+            if (parseInt(sliceArr[i].time) >= timesTamp(req.query.month).start && parseInt(sliceArr[i].time) <= timesTamp(req.query.month).end) {
+                monyArr.push(sliceArr[i])
+            }
+        }
+    }
     //统计支出与收入的金额
-    for (let j = 0; j < timeArr.length; j++) {
-        if (timeArr[j].type === '1') {
-            income = income + parseInt(timeArr[j].amount);
+    for (let j = 0; j < monyArr.length; j++) {
+        if (monyArr[j].type === '1') {
+            income = income + parseInt(monyArr[j].amount);
         } else {
-            expenditure = expenditure + parseInt(timeArr[j].amount);
+            expenditure = expenditure + parseInt(monyArr[j].amount);
         }
     }
     //分页
